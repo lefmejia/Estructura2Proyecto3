@@ -4,8 +4,6 @@
 #include <iomanip>
 
 
-
-
 void ArbolBinario::print2()
 {
     raiz->print();
@@ -60,11 +58,13 @@ void ArbolBinario::insert(int data)
     raiz->Altura = (raiz->AlturaD >= raiz->AlturaI ? raiz->AlturaD : raiz->AlturaI) + 1;
 }
 
+
 void ArbolBinario::insertRec(int data, Node* root)
 {
 
-    if (root->data == data)
+    if (root->data == data) {
         return;
+    }
 
     if (data < root->data)
     {
