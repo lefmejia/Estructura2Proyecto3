@@ -2,7 +2,24 @@
 #include <iostream>
 #include <ctime>
 #include <iomanip>
+#include <fstream>
 
+using namespace std;
+
+void ArbolBinario::cargarArbol() {
+    fstream archivo("datab_jc.dat", ios::in|ios::binary);
+    if (!archivo) {
+        cout << "No se pudo abrir el archivo.";
+            return;
+    }
+    registro aux;
+
+    for (int i = 0; i < 3;i++) {
+        archivo.read(reinterpret_cast<char*>(&aux), sizeof(registro));
+        insert(aux.lastname, aux.name);
+    }
+    archivo.close();
+}
 
 void ArbolBinario::print2()
 {
@@ -10,6 +27,50 @@ void ArbolBinario::print2()
     std::cout << '\n';
 }
 
+ArbolBinario::Node* ArbolBinario::buscar(string data) {
+    return buscarRec(data, raiz);
+}
+
+ArbolBinario::Node* ArbolBinario::buscarRec(string data, Node* raiz) {
+    if (raiz) {
+        if (data == raiz->data) {
+            cout << "El elemento fue encontrado - " << data;
+            return raiz;
+        }
+        else if (data < raiz->data) {
+            return buscarRec(data, raiz->left);
+        }
+        else {
+            return buscarRec(data, raiz->right);
+        }
+    }
+    return nullptr;
+}
+
+ArbolBinario::Node* ArbolBinario::buscar2(string data, string name) {
+    return buscar2Rec(data, name, raiz);
+}
+
+ArbolBinario::Node* ArbolBinario::buscar2Rec(string data, string name, Node* raiz) {
+    if (raiz) {
+        if (data == raiz->data) {
+            cout << "El elemento fue encontrado - " << data;
+            for (string i : raiz->names) {
+                if (i == name) {
+                    cout << "Elemento encontrado!";
+                    break;
+                }
+            }
+            return raiz;
+        }
+        else if (data < raiz->data) {
+            return buscarRec(data, raiz->left);
+        }
+        else {
+            return buscarRec(data, raiz->right);
+        }
+    }
+}
 void ArbolBinario::Node::print()
 {
     std::cout << data << '\n';
@@ -46,30 +107,34 @@ void ArbolBinario::Node::print2()
 }
 
 
-void ArbolBinario::insert(int data)
+void ArbolBinario::insert(string data, string name)
 {
     if (raiz == nullptr)
     {
         raiz = new Node(data);
+        cout << "Nodo agregado\n";
         return;
     }
 
-    insertRec(data, raiz);
+    insertRec(data, name, raiz);
     raiz->Altura = (raiz->AlturaD >= raiz->AlturaI ? raiz->AlturaD : raiz->AlturaI) + 1;
 }
 
 
-void ArbolBinario::insertRec(int data, Node* root)
+void ArbolBinario::insertRec(string data, string name, Node* root)
 {
 
-    if (root->data == data) {
+    if (strcmp(root->data.c_str() ,data.c_str()) == 0) {
+        root->names.push_back(name);
         return;
     }
 
-    if (data < root->data)
+    if (strcmp(data.c_str() , root->data.c_str()) < 0)
     {
         if (root->left == nullptr)
         {
+            cout << "Nodo agregado\n";
+            root->names.push_back(name);
             root->left = new Node(data);
             root->left->parent = root;
             root->AlturaI++;
@@ -78,21 +143,23 @@ void ArbolBinario::insertRec(int data, Node* root)
         }
         else
         {
-            insertRec(data, root->left);
+            insertRec(data, name, root->left);
             root->AlturaI = root->left->Altura + 1;
             root->FactorEquilibrio = root->AlturaD - root->AlturaI;
             if (root->FactorEquilibrio < -1 || root->FactorEquilibrio>1)
             {
                 Balancear(root, root->FactorEquilibrio);
-                
+
             }
         }
-
     }
+    
     else
     {
         if (root->right == nullptr)
         {
+            cout << "nodo agregado\n" ;
+            root->names.push_back(name);
             root->right = new Node(data);
             root->right->parent = root;
             root->AlturaD++;
@@ -101,7 +168,7 @@ void ArbolBinario::insertRec(int data, Node* root)
         }
         else
         {
-            insertRec(data, root->right);
+            insertRec(data,name, root->right);
             root->AlturaD = root->right->Altura + 1;
             root->FactorEquilibrio = root->AlturaD - root->AlturaI;
             if (root->FactorEquilibrio < -1 || root->FactorEquilibrio>1)
@@ -256,14 +323,18 @@ void ArbolBinario::rotarI(Node* root)
     }
 }
 
-void ArbolBinario::eliminar(int data)
+void ArbolBinario::eliminar(string data)
 {
+    if (!raiz) {
+        cout << "El arbol esta vacio!";
+        return;
+    }
     eliminarRec(data, raiz);
 }
 
-bool ArbolBinario::eliminarRec(int data, Node* root)
+bool ArbolBinario::eliminarRec(string data, Node* root)
 {
-    if (data == root->data)
+    if (strcmp(data.c_str(), root->data.c_str())== 0)
     {
         
         
@@ -394,6 +465,66 @@ void ArbolBinario::print()
             printSubtree(raiz, depth, max - depth + 1, true);
             std::cout << std::endl;
         }
+    }
+}
+
+void ArbolBinario::printInOrder() {
+    if (!raiz) {
+        cout << "El arbol esta vacio!";
+        return;
+    }
+    printInOrderRec(raiz);
+    cout << "\n";
+}
+
+void ArbolBinario::printInOrderRec(Node* raiz) {
+    if (!raiz) {
+        return;
+    }
+    else {
+        printInOrderRec(raiz->left);
+        cout << raiz->data <<" ";
+        printInOrderRec(raiz->right);
+    }
+}
+
+void ArbolBinario::printPreOrder() {
+    if (!raiz) {
+        cout << "El arbol esta vacio!";
+        return;
+    }
+        printPreOrderRec(raiz);
+        cout << "\n";
+}
+
+void ArbolBinario::printPreOrderRec(Node* raiz) {
+    if (!raiz) {
+        return;
+    }
+    else {
+        cout << raiz->data << " ";
+        printPreOrderRec(raiz->left);
+        printPreOrderRec(raiz->right);
+    }
+}
+
+void ArbolBinario::printPostOrder() {
+    if (!raiz) {
+        cout << "El arbol esta vacio!";
+        return;
+    }
+    printPostOrderRec(raiz);
+    cout << "\n";
+}
+
+void ArbolBinario::printPostOrderRec(Node* raiz) {
+    if (!raiz) {
+        return;
+    }
+    else {
+        printPostOrderRec(raiz->left);
+        printPostOrderRec(raiz->right);
+        cout << raiz->data << " ";
     }
 }
 
