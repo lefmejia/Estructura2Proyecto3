@@ -5,7 +5,7 @@
 #include <vector>
 using namespace std;
 
-struct registro {
+struct registro{
     int id;
     char name[30];
     char lastname[30];
@@ -20,17 +20,24 @@ struct registro {
     char business_name[50];
 };
 
+struct repetidos {
+    string name;
+    vector<long> bytes;
+};
+
+
 class ArbolBinario
 {
 public:
         void cargarArbol();
+        void busquedaSecuencial(string data, string name);
     class Node
     {
     public:
         Node(string data)
             : data(data), left(nullptr), right(nullptr),FactorEquilibrio(0),Altura(0),AlturaD(0),AlturaI(0),parent(nullptr)
         {}
-        vector<string> names;
+        vector<repetidos> names;
         void print();
         void print2();
         string data;
@@ -50,7 +57,7 @@ public:
     Node* buscarRec(string data, Node* raiz);
     Node* buscar2(string data, string name);
     Node* buscar2Rec(string data, string name, Node* raiz);
-    void insert(string data, string nombre);
+    void insert(long byte, string data, string nombre);
     void print();
     void printInOrder();
     void printInOrderRec(Node* raiz);
@@ -61,11 +68,11 @@ public:
     void print2();
     void eliminar(string);
     int AlturaArbol() {return raiz != nullptr ? (raiz->AlturaD > raiz->AlturaI? raiz->AlturaD : raiz->AlturaI) : 0; }
-    
+        Node* raiz;
+
 
 private:
-    Node* raiz;
-    void insertRec(string data, string name, Node* root);
+    void insertRec(long byte, string data, string name, Node* root);
     bool eliminarRec(string, Node*);
     void reemplazarNodo(Node*, Node*);
     void printSubtree(Node* subtree, int depth, int level, bool first);

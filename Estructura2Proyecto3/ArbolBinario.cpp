@@ -12,12 +12,34 @@ void ArbolBinario::cargarArbol() {
         cout << "No se pudo abrir el archivo.";
             return;
     }
+    int byte; 
     registro aux;
-
-    for (int i = 0; i < 3;i++) {
+    for (int i = 0; i < 1000 ;i++) {
+        byte = archivo.tellg();
         archivo.read(reinterpret_cast<char*>(&aux), sizeof(registro));
-        insert(aux.lastname, aux.name);
+        insert(byte, aux.lastname, aux.name);
     }
+
+    archivo.close();
+}
+
+void ArbolBinario::busquedaSecuencial(string data, string name) {
+    fstream archivo("datab_jc.dat", ios::in | ios::binary);
+    if (!archivo) {
+        cout << "No se pudo abrir el archivo.";
+        return;
+    }
+    registro aux;
+    for(int i= 0; i<1000 ; i++){
+        archivo.read(reinterpret_cast<char*>(&aux), sizeof(registro));
+        if (data == aux.lastname && name == aux.name) {
+            cout << "-------------------------" << "\nID: " << aux.id << " \nName: " << aux.name << " \nLastname: " << aux.lastname << " \nCredit Card: " << aux.credit_card << " \nDate: " << aux.date << " \nDay: " << aux.day
+                 << " \nMonth: " << aux.month << " \nYear: " << aux.year << " \nPayment type: " << aux.payment_type << " \nTotal: " << aux.total << " \nBusiness type: " << aux.business_type
+                 << " \nBusiness Name: " << aux.business_name << "\n-------------------------\n";
+            return;
+        }
+    }
+    cout << "No se encontro un registro con estos parametros.";
     archivo.close();
 }
 
@@ -44,6 +66,7 @@ ArbolBinario::Node* ArbolBinario::buscarRec(string data, Node* raiz) {
             return buscarRec(data, raiz->right);
         }
     }
+    cout << "El elemento no fue encontrado!";
     return nullptr;
 }
 
@@ -55,9 +78,9 @@ ArbolBinario::Node* ArbolBinario::buscar2Rec(string data, string name, Node* rai
     if (raiz) {
         if (data == raiz->data) {
             cout << "El elemento fue encontrado - " << data;
-            for (string i : raiz->names) {
-                if (i == name) {
-                    cout << "Elemento encontrado!";
+            for (repetidos i : raiz->names) {
+                if (name==raiz->data){
+                    cout << "Elemento encontrado!" << name;
                     break;
                 }
             }
@@ -71,6 +94,8 @@ ArbolBinario::Node* ArbolBinario::buscar2Rec(string data, string name, Node* rai
         }
     }
 }
+
+
 void ArbolBinario::Node::print()
 {
     std::cout << data << '\n';
@@ -107,25 +132,41 @@ void ArbolBinario::Node::print2()
 }
 
 
-void ArbolBinario::insert(string data, string name)
+void ArbolBinario::insert(long byte, string data, string name)
 {
     if (raiz == nullptr)
     {
+        repetidos reps;
+        reps.name = name;
+        reps.bytes.push_back(byte);
         raiz = new Node(data);
         cout << "Nodo agregado\n";
         return;
     }
 
-    insertRec(data, name, raiz);
+    insertRec(byte, data, name, raiz);
     raiz->Altura = (raiz->AlturaD >= raiz->AlturaI ? raiz->AlturaD : raiz->AlturaI) + 1;
 }
 
 
-void ArbolBinario::insertRec(string data, string name, Node* root)
+void ArbolBinario::insertRec(long byte, string data, string name, Node* root)
 {
 
     if (strcmp(root->data.c_str() ,data.c_str()) == 0) {
-        root->names.push_back(name);
+        int i;
+        for (i = 0; i < root->names.size(); i++) {
+            if (name == root->names[i].name) {
+                break;
+            }
+        }if (i >= root->names.size()) {
+                repetidos reps;
+                reps.name = name;
+                reps.bytes.push_back(byte);
+                root->names.push_back(reps);
+        }
+        else {
+            root->names[i].bytes.push_back(byte);
+        }
         return;
     }
 
@@ -133,8 +174,11 @@ void ArbolBinario::insertRec(string data, string name, Node* root)
     {
         if (root->left == nullptr)
         {
+            repetidos reps;
             cout << "Nodo agregado\n";
-            root->names.push_back(name);
+            reps.name = name;
+            reps.bytes.push_back(byte);
+            root->names.push_back(reps);
             root->left = new Node(data);
             root->left->parent = root;
             root->AlturaI++;
@@ -143,13 +187,12 @@ void ArbolBinario::insertRec(string data, string name, Node* root)
         }
         else
         {
-            insertRec(data, name, root->left);
+            insertRec(byte, data, name, root->left);
             root->AlturaI = root->left->Altura + 1;
             root->FactorEquilibrio = root->AlturaD - root->AlturaI;
             if (root->FactorEquilibrio < -1 || root->FactorEquilibrio>1)
             {
                 Balancear(root, root->FactorEquilibrio);
-
             }
         }
     }
@@ -158,8 +201,11 @@ void ArbolBinario::insertRec(string data, string name, Node* root)
     {
         if (root->right == nullptr)
         {
+            repetidos reps;
+            reps.name = name;
+            reps.bytes.push_back(byte);
+            root->names.push_back(reps);
             cout << "nodo agregado\n" ;
-            root->names.push_back(name);
             root->right = new Node(data);
             root->right->parent = root;
             root->AlturaD++;
@@ -168,7 +214,8 @@ void ArbolBinario::insertRec(string data, string name, Node* root)
         }
         else
         {
-            insertRec(data,name, root->right);
+
+            insertRec(byte, data,name, root->right);
             root->AlturaD = root->right->Altura + 1;
             root->FactorEquilibrio = root->AlturaD - root->AlturaI;
             if (root->FactorEquilibrio < -1 || root->FactorEquilibrio>1)
@@ -330,14 +377,14 @@ void ArbolBinario::eliminar(string data)
         return;
     }
     eliminarRec(data, raiz);
+
 }
 
 bool ArbolBinario::eliminarRec(string data, Node* root)
 {
     if (strcmp(data.c_str(), root->data.c_str())== 0)
     {
-        
-        
+                
         if (root->left == nullptr && root->right == nullptr)
         {
             reemplazarNodo(root, nullptr);
@@ -355,7 +402,7 @@ bool ArbolBinario::eliminarRec(string data, Node* root)
         {
             reemplazarNodo(root, root->right);
         }
-
+        cout << "El dato fue eliminado!";
         return true;
     }
     else if (data < root->data)
@@ -369,12 +416,12 @@ bool ArbolBinario::eliminarRec(string data, Node* root)
                 if (root->FactorEquilibrio < -1 || root->FactorEquilibrio>1)
                 {
                     Balancear(root, root->FactorEquilibrio);
-
+                    cout << "El dato fue eliminado!";
                 }
             }
         else
         {
-            std::cout << "Numero no existe\n";
+            std::cout << "El dato no existe\n";
             return false;
         }
     }
@@ -389,12 +436,13 @@ bool ArbolBinario::eliminarRec(string data, Node* root)
                 if (root->FactorEquilibrio < -1 || root->FactorEquilibrio>1)
                 {
                     Balancear(root, root->FactorEquilibrio);
+                    cout << "El dato fue eliminado!";
 
                 }
             }
         else
         {
-            std::cout << "Numero no existe\n";
+            std::cout << "El dato no existe\n";
             return false;
         }
     }
@@ -424,11 +472,6 @@ void ArbolBinario::reemplazarNodo(Node* root, Node* reemplazo)
 
         reemplazo->right = root->right;
         reemplazo->left = root->left;
-        /*reemplazo->AlturaD = reemplazo->right->Altura;
-        reemplazo->AlturaI = reemplazo->left->Altura;
-        reemplazo->Altura = reemplazo->AlturaD > reemplazo->AlturaI ? reemplazo->AlturaD : reemplazo->AlturaI;
-        reemplazo->FactorEquilibrio = reemplazo->AlturaD - reemplazo->AlturaI;
-        Balancear(reemplazo, reemplazo->FactorEquilibrio);*/
         reemplazarNodo(reemplazo, nuevo);
     }
     else if (reemplazo->right != nullptr)
@@ -436,11 +479,6 @@ void ArbolBinario::reemplazarNodo(Node* root, Node* reemplazo)
         Node* nuevo = reemplazo->right;
         reemplazo->right = root->right;
         reemplazo->left = root->left;
-        /*reemplazo->AlturaD = reemplazo->right->Altura;
-        reemplazo->AlturaI = reemplazo->left->Altura;
-        reemplazo->Altura = reemplazo->AlturaD > reemplazo->AlturaI ? reemplazo->AlturaD : reemplazo->AlturaI;
-        reemplazo->FactorEquilibrio = reemplazo->AlturaD - reemplazo->AlturaI;
-        Balancear(reemplazo, reemplazo->FactorEquilibrio);*/
         reemplazarNodo(reemplazo, nuevo);
     }
 
@@ -448,17 +486,13 @@ void ArbolBinario::reemplazarNodo(Node* root, Node* reemplazo)
 
 void ArbolBinario::print()
 {
-    // raiz->print();
-    // std::cout << '\n';
+
     if (raiz == nullptr)
     {
         std::cout << "Arbol vacio!" <<
             std::endl;
     }
-    /* else if (raiz->Altura > 4)
-         std::cout << "Not currently supported!" <<
-         std::endl;*/
-
+  
     else {
         int max = raiz->Altura;
         for (int depth = 0; depth <= max; depth++) {
